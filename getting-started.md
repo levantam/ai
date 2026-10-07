@@ -20,6 +20,7 @@ You are setting up Claude Code for the levantam-ai workspace. Do everything belo
   - RTK (compact bash output): https://github.com/rtk-ai/rtk
   - Ponytail (minimal-diff coding style): https://github.com/dietrichgebert/ponytail
   - Open Code Review (structured reviews): https://github.com/alibaba/open-code-review
+  - CodeGraph (local code knowledge graph via MCP): https://github.com/colbymchenry/codegraph
 
 ## 0. Preflight
 - Confirm cwd is the git root (getting-started.md and claudecode/ exist).
@@ -95,18 +96,30 @@ Requires Git >= 2.41 and a configured LLM for ocr (unless using delegate mode on
   ocr llm test
 - Verify plugin exposes /open-code-review:review (and delegate-review if documented)
 
-## 6. Git hygiene
-- Ensure .gitignore covers: .env, ocr local secrets, OS junk
+## 6. CodeGraph (code knowledge graph, MCP)
+Local SQLite graph of symbols/call edges so Claude explores code in one call instead of grep/read crawling. No API keys.
+
+- Install: npm i -g @colbymchenry/codegraph  (or: curl -fsSL https://raw.githubusercontent.com/colbymchenry/codegraph/main/install.sh | sh)
+- Verify: codegraph --help  (open a new terminal if not on PATH)
+- Run: codegraph install   (auto-configures Claude Code MCP; does not index)
+- From repo root run: codegraph init   (creates .codegraph/ and builds the graph; auto-syncs after)
+- Verify: codegraph status
+- Tell me to restart Claude Code; then check the `codegraph` MCP server in /mcp
+- Optional: add "mcp__codegraph__*" to permissions.allow in ~/.claude/settings.json
+
+## 7. Git hygiene
+- Ensure .gitignore covers: .env, ocr local secrets, .codegraph/, OS junk
 - Do not commit API keys or ocr credentials
 - Stage only setup artifacts: CLAUDE.md, .claude/**, .gitignore updates — show me git diff before commit (do not commit unless I say)
 
-## 7. Final report
+## 8. Final report
 Return markdown with:
 | Component | Status | Verify command / action |
 | Archify | ... | ... |
 | RTK | ... | restart Claude + git status |
 | Ponytail | ... | ... |
 | Open Code Review | ... | ocr + slash command |
+| CodeGraph | ... | codegraph status + /mcp |
 | Local skills | ... | /brainstorming, /token-budget, orchestrating-agents |
 | Token rules | ... | .claude/rules/search-strategy.md present |
 | CLAUDE.md | ... | ... |
@@ -122,6 +135,7 @@ List anything that requires my manual step (API keys, Claude restart, marketplac
 | [rtk](https://github.com/rtk-ai/rtk) | Compress Bash output (~token savings) | `brew install rtk` then `rtk init -g` |
 | [ponytail](https://github.com/dietrichgebert/ponytail) | Minimal, senior-dev coding discipline | Claude Code plugin marketplace |
 | [open-code-review](https://github.com/alibaba/open-code-review) | Precision code review CLI + slash commands | `npm i -g @alibaba-group/open-code-review` + plugin |
+| [codegraph](https://github.com/colbymchenry/codegraph) | Local code knowledge graph (MCP) for cheaper exploration | `npm i -g @colbymchenry/codegraph`, `codegraph install`, `codegraph init` |
 
 Docs: [Claude Code CLAUDE.md](https://code.claude.com/docs/en/claude-md) · [Skills](https://code.claude.com/docs/en/skills) · [Plugins](https://code.claude.com/docs/en/plugins)
 
