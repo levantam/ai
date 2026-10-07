@@ -1,0 +1,1 @@
+../../claudecode/rules/search-strategy.md

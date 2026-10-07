@@ -1,0 +1,1 @@
+../../claudecode/rules/skills.md
