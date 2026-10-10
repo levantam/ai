@@ -10,6 +10,11 @@ ITEMS=(
   'Tix Admin Environment|Z=$(mktemp -d) && printf "ZDOTDIR=\"$HOME\"\n[ -f ~/.zshrc ] && source ~/.zshrc\nsource ~/.nvm/nvm.sh && nvm use 12.13.0 && export PATH=\"$HOME/.nvm/versions/node/v12.13.0/bin:$PATH\"\n" > "$Z/.zshrc" && ZDOTDIR="$Z" exec zsh -i'
   'Clean dev caches|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-cache.sh'
   'Claude code - Headroom start|headroom wrap claude'
+  'Clean node_modules (npkill)|npx npkill'
+  'Tami - Run local|TAMI_PORT=7777 docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml up -d --build && open http://localhost:7777'
+  'Tami - Stop local|docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml down'
+  'Android Emulator - Pixel 6 Pro|emulator -avd Pixel_6_Pro'
+  'Git - add, commit, push|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/git-push.sh'
 )
 
 sel=0
