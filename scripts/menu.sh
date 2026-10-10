@@ -1,36 +1,61 @@
 #!/usr/bin/env bash
-# Arrow-key menu: ↑/↓ (or j/k) to move, Enter to run, q to quit.
-# To add a script: append a "Label|command" line to ITEMS below.
+# Arrow-key menu: ↑/↓ (or j/k) to move, 1-9 to jump, Enter to run, q to quit.
+# To add a script: append a "Category|Label|command" line to ITEMS below
+# (keep items of the same category together; a header is drawn when it changes).
 set -u
 
 ITEMS=(
-  "Say hello|echo 'Hello from menu.sh'"
-  "Show git status|git status -sb"
-  "List scripts dir|ls -la"
-  'Tix Admin Environment|Z=$(mktemp -d) && printf "ZDOTDIR=\"$HOME\"\n[ -f ~/.zshrc ] && source ~/.zshrc\nsource ~/.nvm/nvm.sh && nvm use 12.13.0 && export PATH=\"$HOME/.nvm/versions/node/v12.13.0/bin:$PATH\"\n" > "$Z/.zshrc" && ZDOTDIR="$Z" exec zsh -i'
-  'Clean dev caches|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-cache.sh'
-  'Claude code - Headroom start|headroom wrap claude'
-  'Clean node_modules (npkill)|npx npkill'
-  'Tami - Run local|TAMI_PORT=7777 docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml up -d --build && open http://localhost:7777'
-  'Tami - Stop local|docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml down'
-  'Android Emulator - Pixel 6 Pro|emulator -avd Pixel_6_Pro'
-  'Git - add, commit, push|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/git-push.sh'
+  'General|Git - add, commit, push|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/git-push.sh'
+  'AI|Claude code - Headroom start|headroom wrap claude'
+  'beGroup|Tix Admin Environment|Z=$(mktemp -d) && printf "ZDOTDIR=\"$HOME\"\n[ -f ~/.zshrc ] && source ~/.zshrc\nsource ~/.nvm/nvm.sh && nvm use 12.13.0 && export PATH=\"$HOME/.nvm/versions/node/v12.13.0/bin:$PATH\"\n" > "$Z/.zshrc" && ZDOTDIR="$Z" exec zsh -i'
+  'Tools utils|Clean dev caches|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-cache.sh'
+  'Tools utils|Clean node_modules (npkill)|npx npkill'
+  'Tools utils|Tami - Run local|TAMI_PORT=7777 docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml up -d --build && open http://localhost:7777'
+  'Tools utils|Tami - Stop local|docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml down'
+  'Tools utils|Android Emulator - Pixel 6 Pro|emulator -avd Pixel_6_Pro'
+)
+
+# Chocolate-tan puppy: brown ears/head, tan muzzle, pink tongue (colors built once).
+R=$'\033[0m' B=$'\033[38;5;94m' BB=$'\033[48;5;94m' T=$'\033[38;5;180m' TB=$'\033[48;5;180m'
+W=$'\033[38;5;255m' N=$'\033[38;5;52m' P=$'\033[38;5;211m'
+DOG=(
+  " ${B}▄▄▄▄▄▄▄▄▄▄▄▄▄${R}"
+  "${B}███${BB}  ${T}˙${BB}   ${T}˙${BB}  ${R}${B}███${R}"
+  "${B}███${BB}  ${W}◕${BB}   ${W}◕${BB}  ${R}${B}███${R}"
+  "${B}███${TB}  ${N}▄███▄${TB}  ${R}${B}███${R}"
+  "${B}▐██${TB}   ${N}╰${P}U${N}╯${TB}   ${R}${B}██▌${R}"
+  " ${B}▀█▌${TB}       ${R}${B}▐█▀${R}"
+  "   ${B}▀▀▀▀▀▀▀▀▀${R}"
 )
 
 sel=0
 n=${#ITEMS[@]}
 
-draw() {
-  printf '\033[H\033[J'  # clear
-  echo "Select a script (↑/↓ move, Enter run, q quit)"
-  echo
+# Static parts built once: forking tput/seq on every keypress is what made it lag.
+cols=$(tput cols 2>/dev/null || echo 80)
+bar=$(printf '─%.0s' $(seq 48))
+printf -v HEADER '\033[38;5;141m╭%s╮\033[0m\n\033[38;5;141m│\033[0m  \033[1;38;5;213m✻ Welcome to Tami tools. Have a good day\033[0m      \033[38;5;141m│\033[0m\n\033[38;5;141m╰%s╯\033[0m\n\n' "$bar" "$bar"
+
+draw() {  # no subshells: build one string, write once
+  local out line i it cat prev='' r=5 d c
   for i in "${!ITEMS[@]}"; do
-    if [ "$i" -eq "$sel" ]; then printf '  \033[7m> %s\033[0m\n' "${ITEMS[$i]%%|*}"
-    else printf '    %s\n' "${ITEMS[$i]%%|*}"; fi
+    it=${ITEMS[$i]}; cat=${it%%|*}; it=${it#*|}
+    case $cat in General) c=75 ;; beGroup) c=214 ;; AI) c=177 ;; *) c=114 ;; esac
+    if [ "$cat" != "$prev" ]; then
+      printf -v line '  \033[1;38;5;%sm%s\033[0m\033[K\n' "$c" "$cat"; out+=$line; prev=$cat
+    fi
+    if [ "$i" -eq "$sel" ]; then printf -v line '  \033[1;38;5;%sm❯ %2d. %s\033[0m\033[K\n' "$c" $((i + 1)) "${it%%|*}"
+    else printf -v line '    \033[2;38;5;%sm%2d.\033[0;38;5;%sm %s\033[0m\033[K\n' "$c" $((i + 1)) "$c" "${it%%|*}"; fi
+    out+=$line
   done
+  it=${ITEMS[$sel]}; it=${it#*|}; local cmd=${it#*|}
+  printf '\033[H%s%s\n  \033[2m$ %s\033[0m\033[K\n\n  \033[2m↑/↓ j/k move · 1-9 jump · Enter run · q quit\033[0m\033[K\033[J' "$HEADER" "$out" "${cmd:0:$((cols - 6))}"
+  if [ "$cols" -ge 80 ]; then  # dog to the right of the list
+    for d in "${DOG[@]}"; do printf '\033[%d;54H%s' "$r" "$d"; ((r++)); done
+  fi
 }
 
-tput civis 2>/dev/null; trap 'tput cnorm 2>/dev/null' EXIT
+printf '\033[H\033[J'; tput civis 2>/dev/null; trap 'tput cnorm 2>/dev/null' EXIT
 
 while true; do
   draw
@@ -42,9 +67,11 @@ while true; do
     '') # Enter
       printf '\033[H\033[J'
       tput cnorm 2>/dev/null
-      bash -c "${ITEMS[$sel]#*|}"
+      it=${ITEMS[$sel]}; it=${it#*|}
+      bash -c "${it#*|}"
       echo; read -rsn1 -p "Press any key to return to menu..."
       tput civis 2>/dev/null ;;
+    [1-9]) [ $((key - 1)) -lt "$n" ] && sel=$((key - 1)) ;;
     q) break ;;
   esac
 done
