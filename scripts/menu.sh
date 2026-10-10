@@ -13,20 +13,29 @@ ITEMS=(
   'Tools utils|Tami - Run local|TAMI_PORT=7777 docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml up -d --build && open http://localhost:7777'
   'Tools utils|Tami - Stop local|docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml down'
   'Tools utils|Android Emulator - Pixel 6 Pro|emulator -avd Pixel_6_Pro'
+  'About|About|printf "Name:  Tam Le\nEmail: cvtamle@gmail.com\n"'
 )
 
 # Chocolate-tan puppy: brown ears/head, tan muzzle, pink tongue (colors built once).
 R=$'\033[0m' B=$'\033[38;5;94m' BB=$'\033[48;5;94m' T=$'\033[38;5;180m' TB=$'\033[48;5;180m'
 W=$'\033[38;5;255m' N=$'\033[38;5;52m' P=$'\033[38;5;211m'
-DOG=(
-  " ${B}▄▄▄▄▄▄▄▄▄▄▄▄▄${R}"
-  "${B}███${BB}  ${T}˙${BB}   ${T}˙${BB}  ${R}${B}███${R}"
-  "${B}███${BB}  ${W}◕${BB}   ${W}◕${BB}  ${R}${B}███${R}"
-  "${B}███${TB}  ${N}▄███▄${TB}  ${R}${B}███${R}"
-  "${B}▐██${TB}   ${N}╰${P}U${N}╯${TB}   ${R}${B}██▌${R}"
-  " ${B}▀█▌${TB}       ${R}${B}▐█▀${R}"
-  "   ${B}▀▀▀▀▀▀▀▀▀${R}"
-)
+tick=0
+draw_dog() {  # blinks every 8th tick, pants (tongue U/u) every tick
+  [ "$cols" -ge 80 ] || return 0
+  local e=◕ t=U r=5 d
+  [ $((tick % 8)) -eq 7 ] && e=─
+  [ $((tick % 2)) -eq 1 ] && t=u
+  local DOG=(
+    " ${B}▄▄▄▄▄▄▄▄▄▄▄▄▄${R}"
+    "${B}███${BB}  ${T}˙${BB}   ${T}˙${BB}  ${R}${B}███${R}"
+    "${B}███${BB}  ${W}${e}${BB}   ${W}${e}${BB}  ${R}${B}███${R}"
+    "${B}███${TB}  ${N}▄███▄${TB}  ${R}${B}███${R}"
+    "${B}▐██${TB}   ${N}╰${P}${t}${N}╯${TB}   ${R}${B}██▌${R}"
+    " ${B}▀█▌${TB}       ${R}${B}▐█▀${R}"
+    "   ${B}▀▀▀▀▀▀▀▀▀${R}"
+  )
+  for d in "${DOG[@]}"; do printf '\033[%d;54H%s' "$r" "$d"; ((r++)); done
+}
 
 sel=0
 n=${#ITEMS[@]}
@@ -37,10 +46,10 @@ bar=$(printf '─%.0s' $(seq 48))
 printf -v HEADER '\033[38;5;141m╭%s╮\033[0m\n\033[38;5;141m│\033[0m  \033[1;38;5;213m✻ Welcome to Tami tools. Have a good day\033[0m      \033[38;5;141m│\033[0m\n\033[38;5;141m╰%s╯\033[0m\n\n' "$bar" "$bar"
 
 draw() {  # no subshells: build one string, write once
-  local out line i it cat prev='' r=5 d c
+  local out line i it cat prev='' c
   for i in "${!ITEMS[@]}"; do
     it=${ITEMS[$i]}; cat=${it%%|*}; it=${it#*|}
-    case $cat in General) c=75 ;; beGroup) c=214 ;; AI) c=177 ;; *) c=114 ;; esac
+    case $cat in General) c=75 ;; beGroup) c=214 ;; AI) c=177 ;; About) c=246 ;; *) c=114 ;; esac
     if [ "$cat" != "$prev" ]; then
       printf -v line '  \033[1;38;5;%sm%s\033[0m\033[K\n' "$c" "$cat"; out+=$line; prev=$cat
     fi
@@ -50,16 +59,14 @@ draw() {  # no subshells: build one string, write once
   done
   it=${ITEMS[$sel]}; it=${it#*|}; local cmd=${it#*|}
   printf '\033[H%s%s\n  \033[2m$ %s\033[0m\033[K\n\n  \033[2m↑/↓ j/k move · 1-9 jump · Enter run · q quit\033[0m\033[K\033[J' "$HEADER" "$out" "${cmd:0:$((cols - 6))}"
-  if [ "$cols" -ge 80 ]; then  # dog to the right of the list
-    for d in "${DOG[@]}"; do printf '\033[%d;54H%s' "$r" "$d"; ((r++)); done
-  fi
+  draw_dog
 }
 
 printf '\033[H\033[J'; tput civis 2>/dev/null; trap 'tput cnorm 2>/dev/null' EXIT
 
 while true; do
   draw
-  IFS= read -rsn1 key
+  IFS= read -rsn1 -t 0.4 key || { ((tick++)); draw_dog; continue; }  # timeout = animation tick
   if [[ $key == $'\033' ]]; then read -rsn2 -t 0.1 key; fi
   case "$key" in
     '[A'|k) sel=$(( (sel - 1 + n) % n )) ;;
