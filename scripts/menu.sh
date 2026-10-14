@@ -8,11 +8,15 @@ ITEMS=(
   'General|Git - add, commit, push|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/git-push.sh'
   'AI|Claude code - Headroom start|headroom wrap claude'
   'beGroup|Tix Admin Environment|Z=$(mktemp -d) && printf "ZDOTDIR=\"$HOME\"\n[ -f ~/.zshrc ] && source ~/.zshrc\nsource ~/.nvm/nvm.sh && nvm use 12.13.0 && export PATH=\"$HOME/.nvm/versions/node/v12.13.0/bin:$PATH\"\n" > "$Z/.zshrc" && ZDOTDIR="$Z" exec zsh -i'
+  'beGroup|Start Staging env|zsh -ic "k8swe stage && /Users/tam.le/WORKSPACE/src/web-api/start_local.sh"'
+  'beGroup|Start SaaS env|zsh -ic "k8swe saas && /Users/tam.le/WORKSPACE/src/web-api/start_local_saas.sh"'
   'Tools utils|Clean dev caches|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-cache.sh'
+  'Tools utils|Clean Chrome cache (keep tabs)|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-chrome.sh'
   'Tools utils|Clean node_modules (npkill)|npx npkill'
   'Tools utils|Tami - Run local|TAMI_PORT=7777 docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml up -d --build && open http://localhost:7777'
   'Tools utils|Tami - Stop local|docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml down'
   'Tools utils|Android Emulator - Pixel 6 Pro|emulator -avd Pixel_6_Pro'
+  'Tools utils|Public tunnel (localhost.run)|read -rp "Local port: " p; [[ $p =~ ^[0-9]+$ ]] || { echo "Invalid port."; exit 1; }; ssh -R 80:localhost:$p -i ~/.ssh/localhost_run localhost.run'
   'About|About|printf "Name:  Tam Le\nEmail: cvtamle@gmail.com\n"'
 )
 
