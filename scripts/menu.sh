@@ -12,9 +12,12 @@ ITEMS=(
   'beGroup|Tix Admin Environment|Z=$(mktemp -d) && printf "ZDOTDIR=\"$HOME\"\n[ -f ~/.zshrc ] && source ~/.zshrc\nsource ~/.nvm/nvm.sh && nvm use 12.13.0 && export PATH=\"$HOME/.nvm/versions/node/v12.13.0/bin:$PATH\"\n" > "$Z/.zshrc" && ZDOTDIR="$Z" exec zsh -i'
   'beGroup|Start Staging env|zsh -ic "k8swe stage && /Users/tam.le/WORKSPACE/src/web-api/start_local.sh"'
   'beGroup|Start SaaS env|zsh -ic "k8swe saas && /Users/tam.le/WORKSPACE/src/web-api/start_local_saas.sh"'
-  'Tools utils|Clean dev caches|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-cache.sh'
-  'Tools utils|Clean Chrome cache (keep tabs)|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-chrome.sh'
-  'Tools utils|Clean node_modules (npkill)|npx npkill'
+  'Clear storage|Clean ALL (daily/weekly)|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-all.sh'
+  'Clear storage|Clean dev caches|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-cache.sh'
+  'Clear storage|Clean Docker unused images|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-docker.sh'
+  'Clear storage|Clean Android emulator leftovers|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-android.sh'
+  'Clear storage|Clean Chrome cache (keep tabs)|/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-chrome.sh'
+  'Clear storage|Clean node_modules (npkill)|npx npkill'
   'Tools utils|Tami - Run local|TAMI_PORT=7777 docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml up -d --build && open http://localhost:7777'
   'Tools utils|Tami - Stop local|docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml down'
   'Tools utils|Android Emulator - Pixel 6 Pro|emulator -avd Pixel_6_Pro'
@@ -56,7 +59,7 @@ draw() {  # no subshells: build one string, write once
   local out line i it cat prev='' c lines=() selline=0 start avail=$((rows - 8))
   for i in "${!ITEMS[@]}"; do
     it=${ITEMS[$i]}; cat=${it%%|*}; it=${it#*|}
-    case $cat in General) c=75 ;; beGroup) c=214 ;; AI) c=177 ;; About) c=246 ;; *) c=114 ;; esac
+    case $cat in General) c=75 ;; beGroup) c=214 ;; AI) c=177 ;; About) c=246 ;; "Clear storage") c=203 ;; *) c=114 ;; esac
     if [ "$cat" != "$prev" ]; then
       printf -v line '  \033[1;38;5;%sm%s\033[0m\033[K\n' "$c" "$cat"; lines+=("$line"); prev=$cat
     fi

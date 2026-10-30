@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Frees disk by deleting only regenerable dev caches (re-downloaded/rebuilt on next use).
 # Shows sizes first, asks before deleting. Add a path to TARGETS to include more.
-# Not touched: node_modules, nvm node versions, Docker, ~/.cache, app data, project files.
+# Not touched: node_modules, nvm node versions, Docker (see clean-docker.sh), app data, project files.
 set -u
 
 TARGETS=(
@@ -15,6 +15,11 @@ TARGETS=(
   "$HOME/Library/Caches/CocoaPods"
   "$HOME/Library/Developer/Xcode/DerivedData"
   "$HOME/.nvm/.cache"
+  "$HOME/.cache/uv"
+  "$HOME/.nuget/packages"
+  "$HOME/.expo"
+  "$HOME/.cache/puppeteer"
+  "$HOME/Library/Caches/ms-playwright"
 )
 
 found=()
