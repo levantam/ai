@@ -15,4 +15,7 @@ CLAUDE.local.md
 Thumbs.db
 *.swp
 .idea/
-.vscode/
+!.vscode/
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json

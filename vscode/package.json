@@ -1,0 +1,244 @@
+{
+  "name": "tami",
+  "displayName": "Tami",
+  "description": "Tami bot: sidebar with info, tools and options, plus a floating avatar.",
+  "version": "0.1.1",
+  "publisher": "levantam",
+  "private": true,
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "tami",
+          "title": "Tami",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "tami": [
+        {
+          "type": "webview",
+          "id": "tami.sidebar",
+          "name": "Tami"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "tami.openAvatar",
+        "title": "Tami: Open Floating Avatar"
+      },
+      {
+        "command": "tami.git.commitPush",
+        "title": "Tami Git: Commit and Push"
+      },
+      {
+        "command": "tami.git.newBranch",
+        "title": "Tami Git: New Branch from Base"
+      },
+      {
+        "command": "tami.git.mergeRequest",
+        "title": "Tami Git: Create Merge Request"
+      },
+      {
+        "command": "tami.git.deleteBranches",
+        "title": "Tami Git: Delete Local Branches"
+      },
+      {
+        "command": "tami.chooseQuickActions",
+        "title": "Tami: Choose Quick Actions"
+      },
+      {
+        "command": "tami.checkin",
+        "title": "Tami: Check In or Out"
+      },
+      {
+        "command": "tami.admin",
+        "title": "Tami: Admin Sign In or Out"
+      },
+      {
+        "command": "tami.about",
+        "title": "Tami: About",
+        "icon": "$(info)"
+      },
+      {
+        "command": "tami.toggleSections",
+        "title": "Tami: Collapse or Expand All Cards",
+        "icon": "$(collapse-all)"
+      },
+      {
+        "command": "tami.customize",
+        "title": "Tami: Reorder Sidebar Sections",
+        "icon": "$(list-ordered)"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "tami.about",
+          "when": "view == tami.sidebar",
+          "group": "navigation@9"
+        },
+        {
+          "command": "tami.toggleSections",
+          "when": "view == tami.sidebar",
+          "group": "navigation@1"
+        },
+        {
+          "command": "tami.customize",
+          "when": "view == tami.sidebar && tami.admin",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "tami.customize",
+          "when": "tami.admin"
+        },
+        {
+          "command": "tami.chooseQuickActions",
+          "when": "tami.admin"
+        },
+        {
+          "command": "tami.admin",
+          "when": "tami.admin"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Tami",
+      "properties": {
+        "tami.ai.provider": {
+          "type": "string",
+          "enum": [
+            "none",
+            "claude-code",
+            "cursor",
+            "gemini"
+          ],
+          "enumDescriptions": [
+            "No assistant",
+            "Claude Code (supported)",
+            "Cursor (coming soon)",
+            "Gemini (coming soon)"
+          ],
+          "default": "none",
+          "description": "Which AI assistant Tami follows. Only Claude Code is supported for now."
+        },
+        "tami.ai.showProgress": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the progress of the main session and every agent while the assistant works."
+        },
+        "tami.mascotAuto": {
+          "type": "boolean",
+          "default": false,
+          "description": "Switch to a random different mascot on a timer."
+        },
+        "tami.mascotAutoMinutes": {
+          "type": "number",
+          "default": 15,
+          "minimum": 1,
+          "description": "Minutes between automatic mascot changes."
+        },
+        "tami.showSpeech": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Tami's name and message in a line at the top of the mascot card."
+        },
+        "tami.workingCode": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show code symbols flying around the mascot while Claude or an agent is working."
+        },
+        "tami.timeTheme": {
+          "type": "boolean",
+          "default": false,
+          "description": "Change the mascot card background with the time of day (morning, afternoon, night). Off keeps one calm background that follows your VS Code theme."
+        },
+        "tami.attendance.countdown": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the time left until check-out under the usage circle on the mascot card, once you have checked in."
+        },
+        "tami.git.baseBranch": {
+          "type": "string",
+          "default": "",
+          "description": "Branch that new branches start from and merge requests go into. Leave empty to use the default branch of origin (main or master)."
+        },
+        "tami.git.signCommits": {
+          "type": "boolean",
+          "default": false,
+          "description": "Sign commits with GPG when using Commit and push. Needs a signing key; without one the commit fails."
+        },
+        "tami.git.provider": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "github",
+            "gitlab",
+            "bitbucket"
+          ],
+          "default": "auto",
+          "description": "Which site the merge request opens on. Auto reads the origin remote; unknown hosts are treated as GitLab."
+        },
+        "tami.ai.showUsage": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show Claude Code plan usage (5 hour and 7 day windows) in the AI card."
+        },
+        "tami.ai.usageLive": {
+          "type": "boolean",
+          "default": false,
+          "description": "Fetch Claude Code plan usage directly from Anthropic using the Claude Code login on this machine (read from the keychain, kept in memory, sent only to api.anthropic.com). Turn off to rely on a fresh ~/.claude-usage-bar/cache.json only."
+        },
+        "tami.ai.usageOnCard": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show the usage percent and next reset time at the top right of the mascot card."
+        },
+        "tami.mascot": {
+          "type": "string",
+          "default": "robot",
+          "description": "Which mascot Tami shows (ids from media/mascots/mascots.json)."
+        },
+        "tami.avatar.mode": {
+          "type": "string",
+          "enum": [
+            "beside",
+            "window"
+          ],
+          "enumDescriptions": [
+            "Locked panel on the right side of the editor area",
+            "Separate floating OS window"
+          ],
+          "default": "beside",
+          "description": "Where the floating avatar opens."
+        },
+        "tami.avatar.animate": {
+          "type": "boolean",
+          "default": true,
+          "description": "Play the bot idle animation."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p .",
+    "watch": "tsc -w -p .",
+    "package": "python3 pack.py"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0"
+  }
+}

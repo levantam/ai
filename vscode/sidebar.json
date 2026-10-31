@@ -1,0 +1,231 @@
+{
+  "hero": {
+    "time": "auto"
+  },
+  "sections": [
+    {
+      "title": "Diagnostic Tools & Shell",
+      "groups": [
+        {
+          "id": "ide",
+          "icon": "settings",
+          "title": "General IDE Utilities",
+          "open": true,
+          "items": [
+            {
+              "icon": "gear",
+              "label": "Open Extension Settings",
+              "meta": "Cmd+,",
+              "type": "vscode",
+              "command": "workbench.action.openSettings",
+              "quick": true
+            },
+            {
+              "icon": "refresh",
+              "label": "Reload Developer Window",
+              "meta": "Cmd+R",
+              "type": "vscode",
+              "command": "workbench.action.reloadWindow",
+              "quick": true
+            }
+          ]
+        }
+      ],
+      "devOnly": true
+    },
+    {
+      "title": "Git",
+      "groups": [
+        {
+          "id": "git",
+          "icon": "source-control",
+          "title": "Git utils",
+          "open": true,
+          "items": [
+            {
+              "icon": "git-commit",
+              "label": "Commit and push",
+              "meta": "asks message",
+              "type": "vscode",
+              "command": "tami.git.commitPush"
+            },
+            {
+              "icon": "git-branch",
+              "label": "New branch from base",
+              "meta": "asks name",
+              "type": "vscode",
+              "command": "tami.git.newBranch"
+            },
+            {
+              "icon": "git-pull-request",
+              "label": "Create merge request",
+              "meta": "to base",
+              "type": "vscode",
+              "command": "tami.git.mergeRequest"
+            },
+            {
+              "icon": "trash",
+              "label": "Delete local branches",
+              "type": "vscode",
+              "command": "tami.git.deleteBranches"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "System",
+      "groups": [
+        {
+          "id": "storage",
+          "icon": "trash",
+          "title": "Clear storage",
+          "open": false,
+          "items": [
+            {
+              "icon": "flame",
+              "label": "Clean ALL (daily/weekly)",
+              "meta": "all below",
+              "type": "shell",
+              "terminal": "Clean",
+              "command": "/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-all.sh",
+              "local": true
+            },
+            {
+              "icon": "archive",
+              "label": "Clean dev caches",
+              "type": "shell",
+              "terminal": "Clean",
+              "command": "/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-cache.sh",
+              "local": true
+            },
+            {
+              "icon": "package",
+              "label": "Clean Docker unused images",
+              "type": "shell",
+              "terminal": "Clean",
+              "command": "/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-docker.sh",
+              "local": true
+            },
+            {
+              "icon": "device-mobile",
+              "label": "Clean Android emulator leftovers",
+              "type": "shell",
+              "terminal": "Clean",
+              "command": "/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-android.sh",
+              "local": true
+            },
+            {
+              "icon": "browser",
+              "label": "Clean Chrome cache",
+              "meta": "keeps tabs",
+              "type": "shell",
+              "terminal": "Clean",
+              "command": "/Users/tam.le/WORKSPACE/AI/levantam-ai/scripts/clean-chrome.sh",
+              "local": true
+            },
+            {
+              "icon": "folder-opened",
+              "label": "Clean node_modules",
+              "meta": "npkill",
+              "type": "shell",
+              "terminal": "Clean",
+              "command": "npx npkill",
+              "local": true
+            }
+          ]
+        },
+        {
+          "id": "tools",
+          "icon": "tools",
+          "title": "Tools utils",
+          "open": false,
+          "items": [
+            {
+              "icon": "play",
+              "label": "Tami - Run local",
+              "meta": ":7777",
+              "type": "shell",
+              "terminal": "Tami local",
+              "command": "TAMI_PORT=7777 docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml up -d --build && open http://localhost:7777",
+              "local": true
+            },
+            {
+              "icon": "stop-circle",
+              "label": "Tami - Stop local",
+              "type": "shell",
+              "terminal": "Tami local",
+              "command": "docker-compose -f /Users/tam.le/WORKSPACE/src/web/be-uploader-client/docker-compose.yml down",
+              "local": true
+            },
+            {
+              "icon": "device-mobile",
+              "label": "Android Emulator - Pixel 6 Pro",
+              "type": "shell",
+              "terminal": "Emulator",
+              "command": "emulator -avd Pixel_6_Pro",
+              "local": true
+            },
+            {
+              "icon": "globe",
+              "label": "Public tunnel (localhost.run)",
+              "meta": "asks for port",
+              "type": "shell",
+              "terminal": "Tunnel",
+              "command": "read -rp \"Local port: \" p; [[ $p =~ ^[0-9]+$ ]] || { echo \"Invalid port.\"; exit 1; }; ssh -R 80:localhost:$p -i ~/.ssh/localhost_run localhost.run",
+              "local": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "beGroup",
+      "groups": [
+        {
+          "id": "begroup",
+          "icon": "server-environment",
+          "title": "beGroup Utils",
+          "open": true,
+          "items": [
+            {
+              "icon": "terminal",
+              "label": "Tix Admin Environment",
+              "meta": "node 12.13",
+              "type": "shell",
+              "terminal": "Tix Admin",
+              "command": "source ~/.nvm/nvm.sh && nvm use 12.13.0",
+              "local": true
+            },
+            {
+              "icon": "rocket",
+              "label": "Start Staging env",
+              "meta": "k8s stage",
+              "type": "shell",
+              "terminal": "Staging",
+              "command": "zsh -ic \"k8swe stage && /Users/tam.le/WORKSPACE/src/web-api/start_local.sh\"",
+              "local": true
+            },
+            {
+              "icon": "cloud",
+              "label": "Start SaaS env",
+              "meta": "k8s saas",
+              "type": "shell",
+              "terminal": "SaaS",
+              "command": "zsh -ic \"k8swe saas && /Users/tam.le/WORKSPACE/src/web-api/start_local_saas.sh\"",
+              "local": true
+            },
+            {
+              "icon": "{{attendanceIcon}}",
+              "label": "{{attendanceLabel}}",
+              "meta": "{{attendance}}",
+              "type": "vscode",
+              "command": "tami.checkin",
+              "guest": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

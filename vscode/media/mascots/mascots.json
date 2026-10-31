@@ -1,0 +1,117 @@
+{
+  "robot": {
+    "label": "Robot",
+    "aspect": "380 / 400",
+    "layers": [
+      "arm",
+      "body"
+    ],
+    "armOrigin": "77% 60%",
+    "lids": {
+      "color": "#0a3ac4",
+      "w": "17%",
+      "h": "10%",
+      "pos": [
+        [
+          "31.5%",
+          "34%"
+        ],
+        [
+          "59%",
+          "34%"
+        ]
+      ]
+    }
+  },
+  "duck": {
+    "label": "AI Duck",
+    "aspect": "210 / 400",
+    "layers": [
+      "body"
+    ]
+  },
+  "astronaut": {
+    "label": "Astronaut",
+    "aspect": "261 / 400",
+    "layers": [
+      "body"
+    ]
+  },
+  "navy-left": {
+    "label": "Navy (left)",
+    "aspect": "229 / 309",
+    "layers": [
+      "body"
+    ]
+  },
+  "navy-tilt": {
+    "label": "Navy (tilt)",
+    "aspect": "231 / 251",
+    "layers": [
+      "body"
+    ]
+  },
+  "navy-front": {
+    "label": "Navy (front)",
+    "aspect": "239 / 308",
+    "layers": [
+      "body"
+    ]
+  },
+  "bot-flower": {
+    "label": "Chatbot (flower)",
+    "aspect": "237 / 400",
+    "layers": [
+      "body"
+    ]
+  },
+  "bot-pinkwave": {
+    "label": "Chatbot (pink)",
+    "aspect": "363 / 400",
+    "layers": [
+      "body"
+    ]
+  },
+  "bot-tall": {
+    "label": "Chatbot (tall)",
+    "aspect": "290 / 400",
+    "layers": [
+      "body"
+    ]
+  },
+  "bot-reader": {
+    "label": "Chatbot (reader)",
+    "aspect": "259 / 400",
+    "layers": [
+      "body"
+    ]
+  },
+  "bot-antenna": {
+    "label": "Chatbot (antenna)",
+    "aspect": "366 / 400",
+    "layers": [
+      "body"
+    ]
+  },
+  "bot-cat": {
+    "label": "Chatbot (cat)",
+    "aspect": "400 / 400",
+    "layers": [
+      "body"
+    ]
+  },
+  "bot-white": {
+    "label": "Chatbot (white)",
+    "aspect": "480 / 296",
+    "layers": [
+      "body"
+    ]
+  },
+  "shiba": {
+    "label": "Shiba robot",
+    "aspect": "234 / 400",
+    "layers": [
+      "body"
+    ]
+  }
+}
