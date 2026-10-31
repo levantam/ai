@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { deleteCommands, downloadTemplate, uploadCommands } from './custom';
 import { SidebarProvider } from './sidebar';
 import { currentAvatar, openAvatar, refreshAvatar } from './avatar';
 import * as git from './git';
@@ -20,6 +21,9 @@ export function activate(ctx: vscode.ExtensionContext) {
     vscode.commands.registerCommand('tami.openAvatar', () => openAvatar(ctx)),
     ...([['commitPush', git.commitPush], ['newBranch', git.newBranch], ['deleteBranches', git.deleteBranches], ['mergeRequest', git.createMergeRequest]] as const).map(([id, fn]) =>
       vscode.commands.registerCommand(`tami.git.${id}`, () => fn().catch((e: Error) => vscode.window.showErrorMessage(`Tami git: ${e.message}`)))),
+    vscode.commands.registerCommand('tami.custom.template', () => downloadTemplate()),
+    vscode.commands.registerCommand('tami.custom.delete', () => deleteCommands(ctx, () => sidebar.render())),
+    vscode.commands.registerCommand('tami.custom.upload', () => uploadCommands(ctx, () => sidebar.render())),
     vscode.commands.registerCommand('tami.checkin', () => sidebar.checkin()),
     vscode.commands.registerCommand('tami.about', async () => {
       const pick = await vscode.window.showInformationMessage(`Tami ${ctx.extension.packageJSON.version}`, { modal: true, detail: `Author: Telegram ${AUTHOR_TELEGRAM}` }, 'Copy username');

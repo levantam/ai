@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
 import * as path from 'path';
+import { customSection } from './custom';
 
 /** Anything clickable: hero quick action or a group item. */
 export interface Action {
@@ -11,6 +12,7 @@ export interface Action {
   local?: boolean;   // only works on the author's machine: left out of the shared build (pack.py --share)
   guest?: boolean;   // shown as a quick action to everyone, signed in or not (the item's own section stays admin-only)
   quick?: boolean;   // group items: show as a quick-run button under the mascot by default
+  fresh?: boolean;   // shell actions: always open a new terminal (for interactive sessions like claude)
   terminal?: string; // shell actions: terminal name (default "Tami"), so long-running envs get their own
   meta?: string;
   metaIcon?: string;
@@ -18,7 +20,7 @@ export interface Action {
 }
 export interface Row { icon?: string; label: string; value: string; style?: 'mono' | 'accent' | 'chip'; valueIcon?: string; progress?: number }
 export interface Group { id: string; icon?: string; title: string; open?: boolean; items: Action[] }
-export interface Section { title: string; devOnly?: boolean; /* shown only while the extension runs in development mode */ badge?: string; rows?: Row[]; groups?: Group[] }
+export interface Section { title: string; guest?: boolean; /* shown to guests too, not only admin */ devOnly?: boolean; /* shown only while the extension runs in development mode */ badge?: string; rows?: Row[]; groups?: Group[] }
 export interface SidebarConfig {
   hero: { time?: 'auto' | 'morning' | 'afternoon' | 'night'; actions?: Action[] };
   sections: Section[];
@@ -27,7 +29,9 @@ export interface SidebarConfig {
 export function loadConfig(ctx: vscode.ExtensionContext): SidebarConfig {
   const file = path.join(ctx.extensionPath, 'sidebar.json');
   try {
-    return JSON.parse(fs.readFileSync(file, 'utf8')) as SidebarConfig;
+    const cfg = JSON.parse(fs.readFileSync(file, 'utf8')) as SidebarConfig;
+    cfg.sections.push(customSection(ctx));
+    return cfg;
   } catch (e) {
     vscode.window.showErrorMessage(`Tami: cannot read sidebar.json (${(e as Error).message})`);
     return { hero: { actions: [] }, sections: [] };
@@ -38,7 +42,7 @@ export async function runAction(a: Action): Promise<void> {
   switch (a.type) {
     case 'shell': {
       const name = a.terminal ?? 'Tami';
-      const term = vscode.window.terminals.find((x) => x.name === name) ?? vscode.window.createTerminal(name);
+      const term = (!a.fresh && vscode.window.terminals.find((x) => x.name === name)) || vscode.window.createTerminal(name);
       term.show(true);
       term.sendText(a.command ?? '');
       return;

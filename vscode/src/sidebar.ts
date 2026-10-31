@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
 import { Action, Group, loadConfig, Row, runAction, Section, SidebarConfig } from './tools';
 import { currentMascot, esc, mascots, renderPage } from './page';
 import { liveSessions, readRun } from './claude';
@@ -37,6 +38,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     view.onDidDispose(() => { this.stopPolling(); this.stopClock(); });
     view.webview.onDidReceiveMessage(async (m) => {
       switch (m.type) {
+        case 'newClaude': await runAction({ label: 'New Claude session', type: 'shell', terminal: 'Claude', fresh: true, command: 'env -u CLAUDECODE -u CLAUDE_PID -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_SSE_PORT -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN sh -c \'if command -v headroom >/dev/null; then headroom wrap claude; else claude; fi\'' }); break;
         case 'run': if (this.actions[m.index]) await runAction(this.actions[m.index]); break;
         case 'ready': this.pushAgents(); this.pushCall(); break;
         case 'callAnswer': await this.callAnswer(m.kind); break;
@@ -57,6 +59,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     });
   }
 
+  /** Loading animations from media/loading, as webview URLs joined by "|"; the page picks one at random per running agent. */
+  private gifs(): string {
+    const dir = vscode.Uri.joinPath(this.ctx.extensionUri, 'media', 'loading');
+    try { return fs.readdirSync(dir.fsPath).filter((f) => f.endsWith('.gif')).map((f) => this.view!.webview.asWebviewUri(vscode.Uri.joinPath(dir, f)).toString()).join('|'); } catch { return ''; }
+  }
   render() {
     if (!this.view) return;
     this.actions = [];
@@ -110,7 +117,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const dev = this.ctx.extensionMode === vscode.ExtensionMode.Development;
     return cfg.sections.filter((s) => !s.devOnly || dev);
   }
-  private visibleSections(cfg: SidebarConfig): Section[] { return this.isAdmin() ? this.devSections(cfg) : []; }
+  private visibleSections(cfg: SidebarConfig): Section[] { const all = this.devSections(cfg); return this.isAdmin() ? all : all.filter((x) => x.guest); }
 
   // ---- ordering: user order is saved per list (blocks, groups of a section, items of a group); new entries go last
   private ordered<T>(store: string, list: T[], key: (t: T) => string): T[] {
@@ -220,7 +227,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       const pids = (await Promise.all(vscode.window.terminals.map((t) => t.processId))).filter((n): n is number => typeof n === 'number');
       owned = await ownedSessions(all, pids, folders);
     }
-    this.view?.webview.postMessage({ type: 'agents', agents: readRun(folders[0], Date.now(), owned), noWorkspace: false });
+    const agents = readRun(folders[0], Date.now(), owned);
+    this.view?.webview.postMessage({ type: 'agents', agents, noWorkspace: false });
   }
 
   private pushAgents() {
@@ -338,8 +346,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const timed = vscode.workspace.getConfiguration('tami').get<boolean>('timeTheme', false);
     const flyCode = vscode.workspace.getConfiguration('tami').get<boolean>('workingCode', true);
     const speech = vscode.workspace.getConfiguration('tami').get<boolean>('showSpeech', true);
-    const hero = `<div class="hero" data-admin="${admin ? 1 : 0}" data-mood="idle" data-code="${flyCode ? 1 : 0}" data-say="${speech ? 1 : 0}" data-time="${timed ? timeOfDay(cfg.hero.time) : 'plain'}" data-fixed="${!timed || (cfg.hero.time && cfg.hero.time !== 'auto') ? 1 : 0}"><div class="fx"><i class="meteor m1"></i><i class="meteor m2"></i><i class="meteor m3"></i><i class="bird b1"></i><i class="bird b2"></i><i class="bird b3"></i></div>${speech ? '<div class="say" aria-live="polite"><b>Tami</b><span class="msg"></span></div>' : ''}${this.usageCard() || this.countdownOn() ? `<div class="corner">${this.usageCard() ? '<div id="ubadge" class="ubadge" hidden></div>' : ''}${this.countdownOn() ? '<div id="cbadge" class="cbadge" hidden><b></b><span></span></div>' : ''}</div>` : ''}__STAGE__
-      <div class="callinfo" role="status"><b>Claude</b><span><span class="ct">needs your answer</span><i class="dots"><i></i><i></i><i></i></i></span></div>${this.aiOn() ? '<div id="agents" class="agents"><div class="rings"></div><div class="alist"></div></div>' : ''}<div class="callbtns"><button type="button" class="cbtn answer" data-call="answer" aria-label="Answer"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></button></div>
+    const hero = `<div class="hero" data-admin="${admin ? 1 : 0}" data-mood="idle" data-code="${flyCode ? 1 : 0}" data-say="${speech ? 1 : 0}" data-time="${timed ? timeOfDay(cfg.hero.time) : 'plain'}" data-fixed="${!timed || (cfg.hero.time && cfg.hero.time !== 'auto') ? 1 : 0}"><div class="fx"><i class="meteor m1"></i><i class="meteor m2"></i><i class="meteor m3"></i><i class="bird b1"></i><i class="bird b2"></i><i class="bird b3"></i></div>${speech ? `<div class="say" aria-live="polite"><b>Tami</b><span class="msg"></span>${admin ? `<button class="newclaude" id="adminBtn" title="Sign out of admin">${ico('unlock')}</button>` : ''}<button class="newclaude" data-newclaude title="New Claude session (Headroom if installed)">${ico('add')}</button></div>` : ''}${this.usageCard() || this.countdownOn() ? `<div class="corner">${this.usageCard() ? '<div id="ubadge" class="ubadge" hidden></div>' : ''}${this.countdownOn() ? '<div id="cbadge" class="cbadge" hidden><b></b><span></span></div>' : ''}</div>` : ''}__STAGE__
+      <div class="callinfo" role="status"><b>Claude</b><span><span class="ct">needs your answer</span><i class="dots"><i></i><i></i><i></i></i></span></div>${this.aiOn() ? '<div id="agents" class="agents" data-gifs="' + esc(this.gifs()) + '"><div class="rings"></div><div class="alist"></div></div>' : ''}<div class="callbtns"><button type="button" class="cbtn answer" data-call="answer" aria-label="Answer"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></button></div>
       <div class="actions">${quick.map((a) => `<button data-run="${this.act(a)}" title="${esc(sub(a.label))}">${ico(sub(a.icon ?? ''))}<span>${esc(sub(a.label))}</span></button>`).join('')}</div>
       <button type="button" class="qedit" data-quick="edit">${ico('edit')}<span>${quick.length ? 'Change quick actions' : 'Choose quick actions'}</span></button>
     </div>`;
@@ -352,7 +360,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       { key: 'options', html: (mv) => {
         const open = this.ctx.workspaceState.get<boolean>('group.options', true);
         return this.sec('options', 'Tami', '', mv, `<details class="group opts" data-id="options" ${open ? 'open' : ''}><summary>${ico('sparkle')}<span>Tami Options</span>${ico('chevron-down', 'chev')}</summary>
-      ${admin ? `<button type="button" class="item" id="adminBtn" title="Sign out of admin">${ico('unlock')}<span>Admin: sign out</span></button>` : ''}
+      ${admin && !speech ? `<button type="button" class="item" id="adminBtn" title="Sign out of admin">${ico('unlock')}<span>Admin: sign out</span></button>` : ''}
       <label class="item">${ico('smiley')}<span>Mascot</span><select id="mascot">${mascotOpts}</select></label>
       <label class="item">${ico('clock')}<span>Background follows time of day</span><input type="checkbox" id="timeTheme" ${timed ? 'checked' : ''}></label>
       <label class="item">${ico('comment')}<span>Show Tami's message</span><input type="checkbox" id="showSpeech" ${speech ? 'checked' : ''}></label>

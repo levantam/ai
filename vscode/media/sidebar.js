@@ -8,6 +8,7 @@
     hero.dataset.time = h >= 5 && h < 12 ? 'morning' : h >= 12 && h < 18 ? 'afternoon' : 'night';
   };
   tick(); setInterval(() => { tick(); if (typeof updateSay === 'function') updateSay(); }, 60000);
+  document.querySelectorAll('[data-newclaude]').forEach((b) => b.addEventListener('click', () => post({ type: 'newClaude' })));
   document.querySelectorAll('[data-run]').forEach((b) =>
     b.addEventListener('click', () => post({ type: 'run', index: Number(b.dataset.run) })));
   document.querySelectorAll('details[data-id]').forEach((d) =>
@@ -141,6 +142,7 @@
     const w = list.find((a) => a.status === 'waiting'); waiting = !!w; asker = w ? w.name : ''; if (!waiting) dismissed = false;
     applyAttn();
     const rings = root.querySelector('.rings'), box = root.querySelector('.alist');
+    if (!rings.dataset.wheel) { rings.dataset.wheel = 1; rings.addEventListener('wheel', (e) => { if (rings.scrollWidth > rings.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) { rings.scrollLeft += e.deltaY; e.preventDefault(); } }, { passive: false }); }
     const keepR = new Set(list.map((a) => 'r-' + a.id));
     rings.querySelectorAll('.ring').forEach((n) => { if (!keepR.has(n.id)) n.remove(); });
     if (!list.length) {
@@ -164,6 +166,8 @@
         r.addEventListener('animationend', (e) => { if (e.target === r) r.style.animationDelay = ''; });
       }
       r.className = 'ring ' + a.status;
+      if (a.status === 'running') { if (!r.dataset.gif) { const g = (root.dataset.gifs || '').split('|').filter(Boolean); if (g.length) { r.dataset.gif = g[Math.floor(Math.random() * g.length)]; r.style.backgroundImage = 'url(' + r.dataset.gif + ')'; } } }
+      else { r.style.backgroundImage = ''; delete r.dataset.gif; }
       r.firstChild.className = 'codicon codicon-' + (a.status === 'waiting' ? 'question' : 'check');
       r.title = a.name + ' - ' + (a.status === 'done' ? 'Done' : a.activity);
       if (rings.children[i] !== r) rings.insertBefore(r, rings.children[i] || null);

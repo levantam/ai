@@ -173,7 +173,8 @@ section.folded { margin-bottom: 6px; }
 
 /* run progress under the mascot: one circle per agent, click to expand the list */
 .agents { margin: 0 0 12px; text-align: center; }
-.rings { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.rings { display: flex; flex-wrap: nowrap; justify-content: safe center; gap: 8px; padding: 4px 2px; overflow-x: auto; scroll-snap-type: x proximity; scrollbar-width: thin; }
+.rings .ring { flex: none; scroll-snap-align: center; }
 .ring { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; padding: 0; border-radius: 50%; border: 2px solid var(--btn-line); background: var(--btn); color: #fff; cursor: pointer; animation: pop .45s cubic-bezier(.2,1.4,.4,1) both; }
 .ring .codicon { display: none; font-size: 14px; }
 .ring.idle { opacity: .5; cursor: default; }
@@ -317,3 +318,13 @@ section.folded { margin-bottom: 6px; }
 @media (prefers-reduced-motion: reduce) { .say b::before, .say.typing .msg::before, .say.typing .msg::after { animation: none !important; } }
 
 .hero[data-say="1"]:not(.attn) .corner { top: 62px; }   /* make room for Tami's line across the top of the card */
+
+.say .newclaude { flex: none; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 6px; background: var(--btn-line, rgba(255,255,255,.12)); color: var(--fg); cursor: pointer; }
+.say .newclaude:hover { filter: brightness(1.3); }
+
+.ring.running { width: 30px; height: 30px; background-size: cover; background-position: center; }
+.ring.running::before { inset: -3px; }
+
+.say .newclaude + .newclaude { margin-left: 0; }
+.say #adminBtn { margin-left: auto; }
+.say #adminBtn + .newclaude { margin-left: 0; }
