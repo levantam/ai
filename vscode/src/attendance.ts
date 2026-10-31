@@ -37,8 +37,8 @@ export function currentCall(r: Rec | undefined, now: number): Call | null {
   return minutes >= MORNING_START && minutes < MORNING_END ? { kind: 'checkin', name: 'Check in', text: "You haven't checked in yet" } : null;
 }
 
-/** A second check-in the same day keeps the first time and leaves any check-out alone. */
-export const checkIn = (now: number, r?: Rec): Rec => (r?.day === dayKey(now) && r.inAt ? r : { day: dayKey(now), inAt: now });
+/** A second check-in the same day keeps the first time; if you had already checked out, it reopens the day (drops the check-out). */
+export const checkIn = (now: number, r?: Rec): Rec => (r?.day === dayKey(now) && r.inAt ? { day: r.day, inAt: r.inAt } : { day: dayKey(now), inAt: now });
 export const checkOut = (r: Rec | undefined, now: number): Rec => ({ ...(r ?? { day: dayKey(now) }), outAt: now });
 
 /** The one sidebar button: "Check in" until you have, then "Check out". */

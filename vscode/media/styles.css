@@ -302,7 +302,7 @@ section.folded { margin-bottom: 6px; }
 }
 
 /* ---- Tami speaks: an incoming chat message under the mascot. Colors come from the card, so it fits every theme and mood. ---- */
-.say { display: flex; align-items: baseline; gap: 8px; margin: 0 0 10px; padding: 9px 12px; text-align: left; font-size: 12px; line-height: 1.4; color: var(--fg);
+.say { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; padding: 9px 12px; text-align: left; font-size: 12px; line-height: 1.4; color: var(--fg);
   background: var(--btn); border-radius: 10px; }
 .say b { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; color: var(--acc); }
 .say b::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #2fb457; }
