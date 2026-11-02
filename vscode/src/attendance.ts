@@ -4,7 +4,7 @@
  * The record resets at midnight there: yesterday's check-in never carries into today.
  */
 
-export const WORK_MS = 8 * 3600_000;          // the check-out call rings this long after checking in
+export const WORK_MS = 9 * 3600_000;          // 8h work + 1h break: the check-out call rings this long after checking in
 export const MORNING_START = 8 * 60 + 30;     // 08:30, minutes after midnight
 export const MORNING_END = 10 * 60;           // 10:00
 const VN_OFFSET = 7 * 3600_000;
@@ -24,13 +24,13 @@ export const isIn = (r: Rec | undefined, now: number): r is Rec & { inAt: number
 
 /**
  * Which call should be ringing right now, if any. A call keeps ringing until the user answers it.
- *  - checked in today and 8 hours have passed: "check out"
+ *  - checked in today and 9 hours have passed: "check out"
  *  - not checked in today, between 08:30 and 10:00: "check in"
  */
 export function currentCall(r: Rec | undefined, now: number): Call | null {
   if (isIn(r, now)) {
     return now >= r.inAt + WORK_MS
-      ? { kind: 'checkout', name: 'Check out', text: `8 hours since you checked in at ${hhmm(r.inAt)}` } : null;
+      ? { kind: 'checkout', name: 'Check out', text: `9 hours since you checked in at ${hhmm(r.inAt)}` } : null;
   }
   const d = vn(now), minutes = d.getUTCHours() * 60 + d.getUTCMinutes();
   if (r?.day === dayKey(now) && r.inAt) return null;          // already checked in (and out) today
@@ -47,5 +47,5 @@ export function button(r: Rec | undefined, now: number): { label: string; icon: 
   return { label: 'Check in', icon: 'sign-in', meta: r?.day === dayKey(now) && r.outAt ? `out ${hhmm(r.outAt)}` : 'not yet' };
 }
 
-/** When the 8 hours are up, for the countdown on the mascot card. null when not checked in. */
+/** When the 9 hours are up, for the countdown on the mascot card. null when not checked in. */
 export const checkoutAt = (r: Rec | undefined, now: number): number | null => (isIn(r, now) ? r.inAt + WORK_MS : null);

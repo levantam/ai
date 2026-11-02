@@ -291,7 +291,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     if (isIn(r, now)) {
       const worked = now - r.inAt;
       if (worked < WORK_MS) {           // leaving early: ask first, because a check-out cannot be taken back from here
-        const pick = await vscode.window.showWarningMessage(`You have worked ${dur(worked)} of 8h`,
+        const pick = await vscode.window.showWarningMessage(`You have worked ${dur(worked)} of 9h`,
           { modal: true, detail: `Checking out now is ${dur(WORK_MS - worked)} early (you checked in at ${hhmm(r.inAt)}). Check out anyway?` }, 'Check out');
         if (pick !== 'Check out') return;
       }
