@@ -167,6 +167,13 @@
               "local": true
             },
             {
+              "icon": "folder-opened",
+              "label": "Finder: Open folder with VS Code",
+              "meta": "macOS",
+              "type": "vscode",
+              "command": "tami.finderOpenWithCode"
+            },
+            {
               "icon": "globe",
               "label": "Public tunnel (localhost.run)",
               "meta": "asks for port",

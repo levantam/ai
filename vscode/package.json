@@ -57,6 +57,10 @@
         "title": "Tami: Choose Quick Actions"
       },
       {
+        "command": "tami.finderOpenWithCode",
+        "title": "Tami: Finder Open Folder with VS Code"
+      },
+      {
         "command": "tami.checkin",
         "title": "Tami: Check In or Out"
       },

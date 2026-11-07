@@ -3,6 +3,7 @@ import { deleteCommands, downloadTemplate, uploadCommands } from './custom';
 import { SidebarProvider } from './sidebar';
 import { currentAvatar, openAvatar, refreshAvatar } from './avatar';
 import * as git from './git';
+import { finderOpenWithCode } from './tools';
 import { animateEnabled, currentMascot, mascots, nextMascot } from './page';
 
 const AUTHOR_TELEGRAM = '@tamvle';
@@ -24,6 +25,7 @@ export function activate(ctx: vscode.ExtensionContext) {
     vscode.commands.registerCommand('tami.custom.template', () => downloadTemplate()),
     vscode.commands.registerCommand('tami.custom.delete', () => deleteCommands(ctx, () => sidebar.render())),
     vscode.commands.registerCommand('tami.custom.upload', () => uploadCommands(ctx, () => sidebar.render())),
+    vscode.commands.registerCommand('tami.finderOpenWithCode', () => finderOpenWithCode(ctx)),
     vscode.commands.registerCommand('tami.checkin', () => sidebar.checkin()),
     vscode.commands.registerCommand('tami.about', async () => {
       const pick = await vscode.window.showInformationMessage(`Tami ${ctx.extension.packageJSON.version}`, { modal: true, detail: `Author: Telegram ${AUTHOR_TELEGRAM}` }, 'Copy username');

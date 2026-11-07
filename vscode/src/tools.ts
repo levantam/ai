@@ -60,3 +60,24 @@ export async function runAction(a: Action): Promise<void> {
       vscode.window.showWarningMessage(`Tami: unknown action type "${(a as Action).type}"`);
   }
 }
+
+/** macOS: add a Finder "Open with VS Code" Quick Action for folders, and make VS Code the default folder handler. Each step is skipped when already present or unavailable. */
+export async function finderOpenWithCode(ctx: vscode.ExtensionContext): Promise<void> {
+  if (process.platform !== 'darwin') { vscode.window.showWarningMessage('Tami: this option is macOS only.'); return; }
+  const { execFileSync } = await import('child_process');
+  const has = (cmd: string) => { try { execFileSync('/usr/bin/which', [cmd], { stdio: 'ignore' }); return true; } catch { return false; } };
+  const done: string[] = [];
+  let added = false;
+  const dest = path.join(process.env.HOME ?? '', 'Library', 'Services', 'Open with VS Code.workflow');
+  if (fs.existsSync(dest)) done.push('Quick Action already in Finder');
+  else {
+    fs.cpSync(path.join(ctx.extensionPath, 'media', 'open-with-vscode.workflow'), dest, { recursive: true });
+    for (const a of ['-flush', '-update']) execFileSync('/System/Library/CoreServices/pbs', [a], { stdio: 'ignore' });
+    added = true;
+    done.push('Quick Action added (Finder > right-click folder > Quick Actions)');
+  }
+  if (has('duti')) { execFileSync('duti', ['-s', 'com.microsoft.VSCode', 'public.folder', 'all']); done.push('VS Code set as default folder app'); }
+  else done.push('default folder app not set: run "brew install duti" and try again');
+  const pick = await vscode.window.showInformationMessage(`Tami: ${done.join('; ')}.`, ...(added ? ['Restart Finder'] : []));
+  if (pick === 'Restart Finder') execFileSync('/usr/bin/killall', ['Finder']);   // makes Finder pick up the new Quick Action
+}
