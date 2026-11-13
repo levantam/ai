@@ -22,7 +22,11 @@ export function parseUsage(raw: any, updatedAt: number): Usage | null {
 }
 
 export function readUsage(file = USAGE_FILE): Usage | null {
-  try { return parseUsage(JSON.parse(fs.readFileSync(file, 'utf8')), fs.statSync(file).mtimeMs); } catch { return null; }
+  try {
+    const u = parseUsage(JSON.parse(fs.readFileSync(file, 'utf8')), fs.statSync(file).mtimeMs);
+    // A cache whose windows already reset is stale (the plugin can keep touching it): ignore it so we fetch live.
+    return u && [u.five_hour, u.seven_day].some((w) => w && w.resetsAt > Date.now()) ? u : null;
+  } catch { return null; }
 }
 
 export interface Deps {
@@ -47,7 +51,7 @@ export class UsageSource {
   state(): UsageState {
     const f = this.d.readFileUsage();
     const best = f && (!this.mem || f.updatedAt > this.mem.updatedAt) ? f : this.mem;
-    return { usage: best, note: best ? undefined : this.note };
+    return { usage: best, note: best ? undefined : this.note ?? (this.live() ? undefined : 'Turn on tami.ai.usageLive to read your Claude Code usage.') };
   }
 
   /** Fetches when due. Resolves true when new numbers arrived. Never throws. */
