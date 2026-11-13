@@ -25,7 +25,7 @@ export const isIn = (r: Rec | undefined, now: number): r is Rec & { inAt: number
 /**
  * Which call should be ringing right now, if any. A call keeps ringing until the user answers it.
  *  - checked in today and 9 hours have passed: "check out"
- *  - not checked in today, between 08:30 and 10:00: "check in"
+ *  - not checked in today, between 08:30 and 10:00, Monday to Friday (Vietnam time): "check in"
  */
 export function currentCall(r: Rec | undefined, now: number): Call | null {
   if (isIn(r, now)) {
@@ -33,6 +33,7 @@ export function currentCall(r: Rec | undefined, now: number): Call | null {
       ? { kind: 'checkout', name: 'Check out', text: `9 hours since you checked in at ${hhmm(r.inAt)}` } : null;
   }
   const d = vn(now), minutes = d.getUTCHours() * 60 + d.getUTCMinutes();
+  if (d.getUTCDay() === 0 || d.getUTCDay() === 6) return null;  // Sun/Sat: no check-in reminder
   if (r?.day === dayKey(now) && r.inAt) return null;          // already checked in (and out) today
   return minutes >= MORNING_START && minutes < MORNING_END ? { kind: 'checkin', name: 'Check in', text: "You haven't checked in yet" } : null;
 }

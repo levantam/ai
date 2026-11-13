@@ -4,6 +4,7 @@ import { SidebarProvider } from './sidebar';
 import { currentAvatar, openAvatar, refreshAvatar } from './avatar';
 import * as git from './git';
 import { finderOpenWithCode } from './tools';
+import { Rec, currentCall, dayKey } from './attendance';
 import { animateEnabled, currentMascot, mascots, nextMascot } from './page';
 
 const AUTHOR_TELEGRAM = '@tamvle';
@@ -16,6 +17,14 @@ export function activate(ctx: vscode.ExtensionContext) {
   sidebar.syncAdmin(true);
   const adminWatch = setInterval(() => sidebar.syncAdmin(), 4000); adminWatch.unref?.();     // a sign-in or sign-out in another window shows here too
   ctx.subscriptions.push({ dispose: () => clearInterval(adminWatch) });
+  // First check-in call of the day: bring the Tami tab forward once, even when the sidebar is hidden (its own clock only runs while visible).
+  const revealCheckin = setInterval(() => {
+    const now = Date.now(), day = dayKey(now);
+    if (currentCall(ctx.globalState.get<Rec>('attendance'), now)?.kind !== 'checkin' || ctx.globalState.get('attendance.revealed') === day) return;
+    void ctx.globalState.update('attendance.revealed', day);
+    void vscode.commands.executeCommand('workbench.view.extension.tami');
+  }, 30_000); revealCheckin.unref?.();
+  ctx.subscriptions.push({ dispose: () => clearInterval(revealCheckin) });
   ctx.subscriptions.push({ dispose: () => autoTimer && clearInterval(autoTimer) });
   ctx.subscriptions.push(
     vscode.window.registerWebviewViewProvider('tami.sidebar', sidebar, { webviewOptions: { retainContextWhenHidden: true } }),
