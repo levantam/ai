@@ -28,6 +28,7 @@ export function activate(ctx: vscode.ExtensionContext) {
   ctx.subscriptions.push({ dispose: () => autoTimer && clearInterval(autoTimer) });
   ctx.subscriptions.push(
     vscode.window.registerWebviewViewProvider('tami.sidebar', sidebar, { webviewOptions: { retainContextWhenHidden: true } }),
+    vscode.commands.registerCommand('tami.debug', () => sidebar.openDebug()),
     vscode.commands.registerCommand('tami.openAvatar', () => openAvatar(ctx)),
     ...([['commitPush', git.commitPush], ['newBranch', git.newBranch], ['deleteBranches', git.deleteBranches], ['mergeRequest', git.createMergeRequest]] as const).map(([id, fn]) =>
       vscode.commands.registerCommand(`tami.git.${id}`, () => fn().catch((e: Error) => vscode.window.showErrorMessage(`Tami git: ${e.message}`)))),

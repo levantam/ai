@@ -190,7 +190,9 @@
   }
   // Plan usage: the extension sends the latest numbers every 2 s; the countdowns tick locally every second.
   const WINDOWS = [['five_hour', '5h', 5 * 3600e3], ['seven_day', '7d', 7 * 86400e3]];
-  let usage = null, note = '', built = '';
+  let usage = null, note = '', built = '', ustate = '', badgeHtml = '', clickedAt = 0;
+  // What the ring shows after a click: spinner while fetching, then the result for a moment.
+  const USTATE = { busy: ['sync codicon-modifier-spin', 'loading'], ok: ['check', 'updated'], fail: ['warning', 'no update'] };
   const sev = (p) => (p >= 85 ? 'bad' : p >= 60 ? 'warn' : 'ok');
   const two = (n) => String(n).padStart(2, '0');
   function left(ms) {
@@ -217,8 +219,10 @@
         const [k, label, span] = wins[0], w = usage[k], over = now >= w.resetsAt;
         badge.hidden = false; badge.className = 'ubadge ' + sev(w.pct) + (over ? ' stale' : '');
         badge.style.setProperty('--p', Math.min(100, w.pct));
-        badge.innerHTML = '<b>' + Math.round(w.pct) + '%</b><span>' + short(w.resetsAt - now) + '</span>';
-        badge.title = wins.map(([kk, l]) => l + ': ' + Math.round(usage[kk].pct) + '% used, resets ' + at(usage[kk].resetsAt)).join('\n');
+        const html = ustate ? '<i class="codicon codicon-' + USTATE[ustate][0] + '"></i><span>' + USTATE[ustate][1] + '</span>'
+          : '<b>' + Math.round(w.pct) + '%</b><span>' + short(w.resetsAt - now) + '</span>';
+        if (html !== badgeHtml) badge.innerHTML = badgeHtml = html;   // only on change, so the spinner is not restarted every second
+        badge.title = wins.map(([kk, l]) => l + ': ' + Math.round(usage[kk].pct) + '% used, resets ' + at(usage[kk].resetsAt)).join('\n') + '\nClick to refresh';
       }
     }
     if (!box) return;
@@ -268,6 +272,17 @@
   setInterval(() => { if (outAt) badgeTicks++; paintCheckout(); }, 1000);
   setInterval(paintUsage, 1000);
   window.addEventListener('message', (e) => { if (e.data.type === 'usage') { usage = e.data.usage; note = e.data.note || ''; paintUsage(); } });
+  // Click the ring to fetch fresh numbers now, skipping the 3-minute wait.
+  const setU = (s) => { ustate = s; paintUsage(); };
+  let giveUp;
+  // Keep the spinner up at least 600 ms so a fast answer is still seen, then show the result for 1.5 s.
+  const finish = (res) => { clearTimeout(giveUp); setTimeout(() => { setU(res); setTimeout(() => setU(''), 1500); }, Math.max(0, 600 - (Date.now() - clickedAt))); };
+  window.addEventListener('message', (e) => { if (e.data.type === 'usage' && e.data.refreshed && ustate === 'busy') finish(e.data.refreshed); });
+  document.addEventListener('click', (e) => {
+    if (ustate || !e.target.closest || !e.target.closest('#ubadge')) return;
+    clickedAt = Date.now(); setU('busy'); post({ type: 'refreshUsage' });
+    giveUp = setTimeout(() => finish('fail'), 15000);   // no answer (longest real path is ~13 s): never spin forever
+  });
   window.addEventListener('message', (e) => { if (e.data.type === 'agents') draw(e.data.agents, e.data.noWorkspace); });
   post({ type: 'ready' });
 })();

@@ -2,11 +2,11 @@
   "name": "tami",
   "displayName": "Tami",
   "description": "Tami bot: sidebar with info, tools and options, plus a floating avatar.",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "publisher": "levantam",
   "private": true,
   "engines": {
-    "vscode": "^1.85.0"
+    "vscode": "^1.90.0"
   },
   "categories": [
     "Other"
@@ -59,6 +59,10 @@
       {
         "command": "tami.finderOpenWithCode",
         "title": "Tami: Finder Open Folder with VS Code"
+      },
+      {
+        "command": "tami.debug",
+        "title": "Tami: Debug View"
       },
       {
         "command": "tami.checkin",
@@ -242,7 +246,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "@types/vscode": "^1.85.0",
+    "@types/vscode": "^1.90.0",
     "typescript": "^5.4.0"
   }
 }

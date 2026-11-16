@@ -20,7 +20,7 @@ export function nextMascot(ids: string[], cur: string, rnd: () => number = Math.
   return others.length ? others[Math.floor(rnd() * others.length)] : cur;
 }
 
-export type Surface = 'sidebar' | 'avatar';
+export type Surface = 'sidebar' | 'avatar' | 'debug';
 export function animateEnabled(): boolean {
   return vscode.workspace.getConfiguration('tami').get<boolean>('avatar.animate', true);
 }

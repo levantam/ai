@@ -7,6 +7,7 @@ import { ownedSessions } from './owner';
 import { Rec, button, checkIn, checkOut, checkoutAt, currentCall, dur, hhmm, isIn, WORK_MS } from './attendance';
 import { UsageSource } from './usage';
 import { checkPin } from './admin';
+import { DEBUG_BODY, DebugController } from './debug';
 
 const QUICK_MAX = 4;
 const itemKey = (g: Group, a: Action) => `${g.id}/${a.label}`;
@@ -24,7 +25,11 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   private sectionKeys: string[] = [];
   private cards: { id: string; def: boolean }[] = []; // every collapsible card and its default state
   private usageSrc = new UsageSource(() => vscode.workspace.getConfiguration('tami').get<boolean>('ai.usageLive', false));
-  constructor(private ctx: vscode.ExtensionContext) {}
+  private dbg: DebugController;
+  constructor(private ctx: vscode.ExtensionContext) {
+    this.dbg = new DebugController(ctx, (m) => void this.view?.webview.postMessage(m), () => this.render(), () => void vscode.commands.executeCommand('workbench.view.extension.tami'));
+  }
+  openDebug() { this.dbg.open(); }
 
   resolveWebviewView(view: vscode.WebviewView) {
     this.view = view;
@@ -37,10 +42,12 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     view.onDidChangeVisibility(() => { if (view.visible) { this.render(); this.startClock(); } else { this.stopPolling(); this.stopClock(); } }); // refresh info (branch etc.)
     view.onDidDispose(() => { this.stopPolling(); this.stopClock(); });
     view.webview.onDidReceiveMessage(async (m) => {
+      if (typeof m.type === 'string' && m.type.startsWith('dbg.')) { await this.dbg.handle({ ...m, type: m.type.slice(4) }); return; }
       switch (m.type) {
         case 'newClaude': await runAction({ label: 'New Claude session', type: 'shell', terminal: 'Claude', fresh: true, command: 'env -u CLAUDECODE -u CLAUDE_PID -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_SSE_PORT -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN sh -c \'if command -v headroom >/dev/null; then headroom wrap claude; else claude; fi\'' }); break;
         case 'run': if (this.actions[m.index]) await runAction(this.actions[m.index]); break;
         case 'ready': this.pushAgents(); this.pushCall(); break;
+        case 'refreshUsage': this.pushUsage(await this.usageSrc.refresh(true) ? 'ok' : 'fail'); break;
         case 'callAnswer': await this.callAnswer(m.kind); break;
         case 'answer': await vscode.commands.executeCommand('workbench.action.terminal.focus'); break;
         case 'toggle': await this.ctx.workspaceState.update(`group.${m.id}`, m.open); break;
@@ -66,6 +73,8 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   }
   render() {
     if (!this.view) return;
+    if (this.dbg.active) { this.stopPolling(); this.dbg.markShown(); this.view.webview.html = renderPage(this.view.webview, this.ctx, 'debug', DEBUG_BODY, ['debug.js']); return; }
+    this.dbg.markShown();
     this.actions = [];
     this.view.webview.html = renderPage(this.view.webview, this.ctx, 'sidebar', this.body(), ['sidebar.js']);
     this.startPolling();
@@ -214,9 +223,9 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
   private countdownOn = () => vscode.workspace.getConfiguration('tami').get<boolean>('attendance.countdown', true);
   private usageCard = () => this.claude() && this.aiCfg().get<boolean>('ai.usageOnCard', false);
   private live = () => this.aiOn() || this.usageOn();
-  private pushUsage() {
+  private pushUsage(refreshed?: 'ok' | 'fail') {
     const st = this.usageSrc.state();
-    this.view?.webview.postMessage({ type: 'usage', usage: st.usage, note: st.note });
+    this.view?.webview.postMessage({ type: 'usage', usage: st.usage, note: st.note, refreshed });
   }
   /** This window's own Claude sessions only: found through this window's terminals, so another VS Code window never leaks in. */
   private async pushRun() {

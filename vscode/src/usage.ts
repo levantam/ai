@@ -54,12 +54,12 @@ export class UsageSource {
     return { usage: best, note: best ? undefined : this.note ?? (this.live() ? undefined : 'Turn on tami.ai.usageLive to read your Claude Code usage.') };
   }
 
-  /** Fetches when due. Resolves true when new numbers arrived. Never throws. */
-  async refresh(): Promise<boolean> {
+  /** Fetches when due, or right away with `force` (a click on the ring). Resolves true when new numbers arrived. Never throws. */
+  async refresh(force = false): Promise<boolean> {
     if (this.busy || !this.live()) return false;
     const now = this.d.now();
     const f = this.d.readFileUsage();
-    if ((f && now - f.updatedAt < TTL) || now < this.nextAt || (this.mem && now - this.mem.updatedAt < TTL)) return false;
+    if (!force && ((f && now - f.updatedAt < TTL) || now < this.nextAt || (this.mem && now - this.mem.updatedAt < TTL))) return false;
     this.busy = true;
     const retry = (ms: number, note: string) => { this.nextAt = now + ms; this.note = note; return false; };
     try {
