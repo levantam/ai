@@ -172,6 +172,17 @@ section.folded { margin-bottom: 6px; }
 .cbadge.due b { color: #ff5a4f; }
 .cbadge.swap { animation: swap-in .35s ease-out; }
 @keyframes swap-in { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: none } }
+.sbadge { display: grid; gap: 5px; min-width: 76px; padding: 6px 8px; border-radius: 8px; background: var(--btn); border: 1px solid var(--btn-line); font-family: var(--vscode-editor-font-family); font-size: 10px; line-height: 1.2; cursor: pointer; transition: background .2s; }
+.sbadge[hidden] { display: none; } .sbadge:hover { background: var(--btn-hover); }
+.sbadge:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+.sbadge .m { --c: #2fb457; display: grid; grid-template-columns: auto 1fr auto; column-gap: 6px; align-items: baseline; }
+.sbadge .m.warn { --c: #f0a020; } .sbadge .m.bad { --c: #ff5a4f; }
+.sbadge .k { opacity: .75; letter-spacing: .06em; font-size: 9px; }
+.sbadge b { font-size: 12px; text-align: right; color: var(--c); font-variant-numeric: tabular-nums; }
+.sbadge i { grid-column: 2 / 4; grid-row: 1; justify-self: end; font-style: normal; opacity: .7; display: none; }
+.sbadge u { grid-column: 1 / -1; height: 3px; margin-top: 3px; border-radius: 2px; background: var(--btn-line); overflow: hidden; text-decoration: none; }
+.sbadge s { display: block; height: 100%; border-radius: 2px; background: var(--c); transition: width .6s ease, background-color .3s; }
+@media (prefers-reduced-motion: reduce) { .sbadge, .sbadge s { transition: none; } }
 .ubadge.warn { --c: #f0a020; } .ubadge.bad { --c: #ff5a4f; } .ubadge.stale { opacity: .6; }
 
 /* run progress under the mascot: one circle per agent, click to expand the list */

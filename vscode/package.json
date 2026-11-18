@@ -2,7 +2,7 @@
   "name": "tami",
   "displayName": "Tami",
   "description": "Tami bot: sidebar with info, tools and options, plus a floating avatar.",
-  "version": "0.1.6",
+  "version": "0.1.9",
   "publisher": "levantam",
   "private": true,
   "engines": {
@@ -212,6 +212,11 @@
           "type": "boolean",
           "default": false,
           "description": "Show the usage percent and next reset time at the top right of the mascot card."
+        },
+        "tami.systemOnCard": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show CPU and RAM use (percent and size, green below 80%, red from 80%) at the top right of the mascot card."
         },
         "tami.mascot": {
           "type": "string",

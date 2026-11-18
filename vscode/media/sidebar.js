@@ -40,6 +40,7 @@
   on('aiUsage', 'change', (e) => post({ type: 'setOption', key: 'ai.showUsage', value: e.target.checked }));
   on('aiUsageCard', 'change', (e) => post({ type: 'setOption', key: 'ai.usageOnCard', value: e.target.checked }));
   on('checkoutCard', 'change', (e) => post({ type: 'setOption', key: 'attendance.countdown', value: e.target.checked }));
+  on('systemCard', 'change', (e) => post({ type: 'setOption', key: 'systemOnCard', value: e.target.checked }));
   on('timeTheme', 'change', (e) => post({ type: 'setOption', key: 'timeTheme', value: e.target.checked }));
   on('workingCode', 'change', (e) => post({ type: 'setOption', key: 'workingCode', value: e.target.checked }));
   on('showSpeech', 'change', (e) => post({ type: 'setOption', key: 'showSpeech', value: e.target.checked }));
@@ -56,6 +57,29 @@
     info.querySelector('b').textContent = attCall ? attCall.name : 'Claude';
     info.querySelector('.ct').textContent = attCall ? attCall.text : (asker && asker !== 'Claude' ? asker + ' needs your answer' : 'needs your answer');
   }
+  // CPU and RAM badge: a meter per metric (label, value, bar). Green below 60%, amber from 60%, red from 80%.
+  // Built once, then only text/width/class change, so the bar eases between samples instead of flashing.
+  window.addEventListener('message', (e) => {
+    const d = e.data, el = document.getElementById('sbadge');
+    if (d.type !== 'sys' || !el) return;
+    if (!el.firstChild) {
+      el.setAttribute('role', 'button'); el.tabIndex = 0;
+      el.title = 'Click to clear memory and cool down';
+      el.onclick = () => post({ type: 'cooldown' });
+      el.onkeydown = (k) => { if (k.key === 'Enter' || k.key === ' ') { k.preventDefault(); post({ type: 'cooldown' }); } };
+      el.innerHTML = ['CPU', 'RAM'].map((k) => '<div class="m"><span class="k">' + k + '</span><b></b><i></i><u><s></s></u></div>').join('');
+    }
+    const set = (m, pct, extra) => {
+      m.className = 'm ' + (pct >= 80 ? 'bad' : pct >= 60 ? 'warn' : 'ok');
+      m.querySelector('b').textContent = pct + '%'; m.querySelector('i').textContent = extra || '';
+      m.querySelector('s').style.width = Math.min(100, pct) + '%';
+    };
+    const [cpu, ram] = el.children;
+    set(cpu, d.cpu); set(ram, d.ram, d.usedGb.toFixed(1) + '/' + Math.round(d.totalGb) + 'G');
+    el.title = 'RAM ' + d.usedGb.toFixed(1) + ' of ' + Math.round(d.totalGb) + ' GB. Click to clear memory and cool down';
+    el.setAttribute('aria-label', 'CPU ' + d.cpu + '%, RAM ' + d.ram + '%. Activate to clear memory.');
+    el.hidden = false;
+  });
   window.addEventListener('message', (e) => { if (e.data.type === 'call') { attCall = e.data.call; applyAttn(); } });
  // "Not now" hides the call until the next question
   const root = document.getElementById('agents');

@@ -47,7 +47,7 @@ export function activate(ctx: vscode.ExtensionContext) {
     vscode.commands.registerCommand('tami.admin', () => sidebar.adminToggle()),
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration('tami.avatar.animate')) broadcast({ type: 'animate', value: animateEnabled() });
-      if (e.affectsConfiguration('tami.ai') || e.affectsConfiguration('tami.attendance') || e.affectsConfiguration('tami.timeTheme') || e.affectsConfiguration('tami.workingCode') || e.affectsConfiguration('tami.showSpeech')) sidebar.render();
+      if (e.affectsConfiguration('tami.ai') || e.affectsConfiguration('tami.attendance') || e.affectsConfiguration('tami.timeTheme') || e.affectsConfiguration('tami.workingCode') || e.affectsConfiguration('tami.showSpeech') || e.affectsConfiguration('tami.systemOnCard')) sidebar.render();
       if (e.affectsConfiguration('tami.mascotAuto') || e.affectsConfiguration('tami.mascotAutoMinutes')) scheduleMascot(ctx);
       if (e.affectsConfiguration('tami.mascot')) { sidebar.render(); refreshAvatar(ctx); }
     }),

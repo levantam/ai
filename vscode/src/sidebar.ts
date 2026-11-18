@@ -7,6 +7,7 @@ import { ownedSessions } from './owner';
 import { Rec, button, checkIn, checkOut, checkoutAt, currentCall, dur, hhmm, isIn, WORK_MS } from './attendance';
 import { UsageSource } from './usage';
 import { checkPin } from './admin';
+import { cooldown, sample } from './sysinfo';
 import { DEBUG_BODY, DebugController } from './debug';
 
 const QUICK_MAX = 4;
@@ -46,7 +47,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       switch (m.type) {
         case 'newClaude': await runAction({ label: 'New Claude session', type: 'shell', terminal: 'Claude', fresh: true, command: 'env -u CLAUDECODE -u CLAUDE_PID -u CLAUDE_CODE_SESSION_ID -u CLAUDE_CODE_CHILD_SESSION -u CLAUDE_CODE_ENTRYPOINT -u CLAUDE_CODE_SSE_PORT -u CLAUDE_CODE_MESSAGING_SOCKET -u CLAUDE_CODE_MESSAGING_TOKEN sh -c \'if command -v headroom >/dev/null; then headroom wrap claude; else claude; fi\'' }); break;
         case 'run': if (this.actions[m.index]) await runAction(this.actions[m.index]); break;
-        case 'ready': this.pushAgents(); this.pushCall(); break;
+        case 'ready': this.pushAgents(); this.pushCall(); void this.pushSys(); break;
         case 'refreshUsage': this.pushUsage(await this.usageSrc.refresh(true) ? 'ok' : 'fail'); break;
         case 'callAnswer': await this.callAnswer(m.kind); break;
         case 'answer': await vscode.commands.executeCommand('workbench.action.terminal.focus'); break;
@@ -60,8 +61,10 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
         case 'editDone': this.setEdit(false); break;
         case 'resetOrder': if (!this.isAdmin()) break; await this.resetOrder(); break;
         case 'setOption':
-          await vscode.workspace.getConfiguration('tami').update(m.key, m.value, vscode.ConfigurationTarget.Global);
+          try { await vscode.workspace.getConfiguration('tami').update(m.key, m.value, vscode.ConfigurationTarget.Global); }
+          catch (e) { void vscode.window.showErrorMessage(`Tami: could not save "${m.key}": ${(e as Error).message}. Reload the window if you just updated.`); this.render(); }
           break;
+        case 'cooldown': await this.cooldown(); break;
       }
     });
   }
@@ -282,8 +285,16 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
 
   // ---- check in / check out
   private clock?: NodeJS.Timeout;
-  private startClock() { this.stopClock(); this.clock = setInterval(() => this.pushCall(), 5000); this.clock.unref?.(); }
+  private startClock() { this.stopClock(); this.clock = setInterval(() => { this.pushCall(); void this.pushSys(); }, 3000); this.clock.unref?.(); }
   private stopClock() { if (this.clock) clearInterval(this.clock); this.clock = undefined; }
+  private async cooldown() {
+    try {
+      const msg = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Tami: clearing memory…' }, cooldown);
+      void vscode.window.showInformationMessage('Tami: ' + msg); void this.pushSys();
+    } catch (e) { void vscode.window.showWarningMessage('Tami: ' + ((e as Error).message.includes('-128') ? 'cancelled.' : (e as Error).message)); }
+  }
+  private sysOn = () => vscode.workspace.getConfiguration('tami').get<boolean>('systemOnCard', false);
+  private async pushSys() { if (this.sysOn() && this.view?.visible) void this.view.webview.postMessage({ type: 'sys', ...(await sample()) }); }
   private rec = () => this.ctx.globalState.get<Rec>('attendance');
   private pushCall() {
     if (!this.view?.visible) return;
@@ -355,7 +366,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
     const timed = vscode.workspace.getConfiguration('tami').get<boolean>('timeTheme', false);
     const flyCode = vscode.workspace.getConfiguration('tami').get<boolean>('workingCode', true);
     const speech = vscode.workspace.getConfiguration('tami').get<boolean>('showSpeech', true);
-    const hero = `<div class="hero" data-admin="${admin ? 1 : 0}" data-mood="idle" data-code="${flyCode ? 1 : 0}" data-say="${speech ? 1 : 0}" data-time="${timed ? timeOfDay(cfg.hero.time) : 'plain'}" data-fixed="${!timed || (cfg.hero.time && cfg.hero.time !== 'auto') ? 1 : 0}"><div class="fx"><i class="meteor m1"></i><i class="meteor m2"></i><i class="meteor m3"></i><i class="bird b1"></i><i class="bird b2"></i><i class="bird b3"></i></div>${speech ? `<div class="say" aria-live="polite"><b>Tami</b><span class="msg"></span>${admin ? `<button class="newclaude" id="adminBtn" title="Sign out of admin">${ico('unlock')}</button>` : ''}<button class="newclaude" data-newclaude title="New Claude session (Headroom if installed)">${ico('add')}</button></div>` : ''}${this.usageCard() || this.countdownOn() ? `<div class="corner">${this.usageCard() ? '<div id="ubadge" class="ubadge" hidden></div>' : ''}${this.countdownOn() ? '<div id="cbadge" class="cbadge" hidden><b></b><span></span></div>' : ''}</div>` : ''}__STAGE__
+    const hero = `<div class="hero" data-admin="${admin ? 1 : 0}" data-mood="idle" data-code="${flyCode ? 1 : 0}" data-say="${speech ? 1 : 0}" data-time="${timed ? timeOfDay(cfg.hero.time) : 'plain'}" data-fixed="${!timed || (cfg.hero.time && cfg.hero.time !== 'auto') ? 1 : 0}"><div class="fx"><i class="meteor m1"></i><i class="meteor m2"></i><i class="meteor m3"></i><i class="bird b1"></i><i class="bird b2"></i><i class="bird b3"></i></div>${speech ? `<div class="say" aria-live="polite"><b>Tami</b><span class="msg"></span>${admin ? `<button class="newclaude" id="adminBtn" title="Sign out of admin">${ico('unlock')}</button>` : ''}<button class="newclaude" data-newclaude title="New Claude session (Headroom if installed)">${ico('add')}</button></div>` : ''}${this.usageCard() || this.countdownOn() || this.sysOn() ? `<div class="corner">${this.sysOn() ? '<div id="sbadge" class="sbadge" hidden></div>' : ''}${this.usageCard() ? '<div id="ubadge" class="ubadge" hidden></div>' : ''}${this.countdownOn() ? '<div id="cbadge" class="cbadge" hidden><b></b><span></span></div>' : ''}</div>` : ''}__STAGE__
       <div class="callinfo" role="status"><b>Claude</b><span><span class="ct">needs your answer</span><i class="dots"><i></i><i></i><i></i></i></span></div>${this.aiOn() ? '<div id="agents" class="agents" data-gifs="' + esc(this.gifs()) + '"><div class="rings"></div><div class="alist"></div></div>' : ''}<div class="callbtns"><button type="button" class="cbtn answer" data-call="answer" aria-label="Answer"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></button></div>
       <div class="actions">${quick.map((a) => `<button data-run="${this.act(a)}" title="${esc(sub(a.label))}">${ico(sub(a.icon ?? ''))}<span>${esc(sub(a.label))}</span></button>`).join('')}</div>
       <button type="button" class="qedit" data-quick="edit">${ico('edit')}<span>${quick.length ? 'Change quick actions' : 'Choose quick actions'}</span></button>
@@ -375,6 +386,7 @@ export class SidebarProvider implements vscode.WebviewViewProvider {
       <label class="item">${ico('comment')}<span>Show Tami's message</span><input type="checkbox" id="showSpeech" ${speech ? 'checked' : ''}></label>
       <label class="item">${ico('code')}<span>Flying code while working</span><input type="checkbox" id="workingCode" ${flyCode ? 'checked' : ''}></label>
       <label class="item">${ico('watch')}<span>Check-out time on mascot card</span><input type="checkbox" id="checkoutCard" ${this.countdownOn() ? 'checked' : ''}></label>
+      <label class="item">${ico('pulse')}<span>CPU and RAM on mascot card</span><input type="checkbox" id="systemCard" ${this.sysOn() ? 'checked' : ''}></label>
       <label class="item">${ico('sync')}<span>Random every ${mins} min</span><input type="checkbox" id="mascotAuto" ${auto ? 'checked' : ''}></label>
     </details>`); } },
       { key: 'ai', html: (mv) => this.aiSection(mv) },

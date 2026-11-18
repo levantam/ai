@@ -156,6 +156,21 @@ Wire into `.claude/rules/` (loaded automatically; path-scoped rules optional lat
 
 ---
 
+## Tami VS Code extension — `vscode/`
+
+Update to a new version (run from `vscode/`, not the repo root):
+
+```sh
+cd vscode
+npm version patch --no-git-tag-version      # bump version in package.json
+npm run compile && npm run package          # -> tami-<version>.vsix  (share build: python3 pack.py --share)
+code --install-extension tami-<version>.vsix --force
+```
+
+Then run **Developer: Reload Window** in VS Code. To test without packaging: press F5 in `vscode/` or run `npm run watch` and reload the window.
+
+---
+
 ## Quick “what do I use when?”
 
 | I want to… | Use |
@@ -168,3 +183,4 @@ Wire into `.claude/rules/` (loaded automatically; path-scoped rules optional lat
 | Keep diffs tiny while coding | **Ponytail** |
 | Review a branch/PR seriously | **ocr** + `/open-code-review:review` |
 | Remember commands | This README |
+| Ship a new Tami extension build | [Tami VS Code extension](#tami-vs-code-extension--vscode) |
